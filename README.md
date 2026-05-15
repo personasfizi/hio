@@ -37,6 +37,46 @@ User opens the app → top headlines load from NewsAPI → user browses 7 catego
 | App/services start and are reachable | ✅ **PASS** |
 | Core functionality works as expected | ⚠️ **PARTIAL** |
 
+---
+
+### ✏️ FORM FIELD — "Core functionality works as expected → PARTIAL" description box
+> Copy the block below and paste it directly into the form's evidence/description field.
+
+```
+Mark: PARTIAL
+
+The running app works correctly — news articles load from NewsAPI, all 7 category tabs filter results, bookmarks persist in IndexedDB, and the service worker registers. However, running npm test reveals that 5 of 10 tests FAIL, directly contradicting the README's stated claim of "✅ 10/10 tests passing."
+
+Steps to reproduce:
+1. git clone https://github.com/Naveena-kemburu/pwa-news-aggregator.git
+2. cd pwa-news-aggregator && npm install
+3. npm test
+
+Actual output:
+  Test Suites: 1 failed, 1 passed, 2 total
+  Tests:       5 failed, 5 passed, 10 total
+
+Error (all 5 ArticleCard tests):
+  invariant expected app router to be mounted
+  at useRouter (node_modules/next/src/client/components/navigation.ts:149)
+  at ArticleCard (components/ArticleCard.tsx:16)
+
+Root cause: ArticleCard calls useRouter() from next/navigation, but
+tests/ArticleCard.test.tsx does not mock next/navigation or wrap renders in
+an App Router context. Every ArticleCard render throws before any assertion runs.
+
+Expected: Tests: 10 passed, 10 total (as claimed in README)
+Actual:   Tests: 5 failed, 5 passed, 10 total
+
+Fix: Add the following at the top of tests/ArticleCard.test.tsx:
+  jest.mock('next/navigation', () => ({
+    useRouter: () => ({ push: jest.fn() }),
+    usePathname: () => '/',
+  }));
+```
+
+---
+
 ### Local Run Notes
 
 Clone succeeded with no errors. `npm install` completed (931 packages, exit 0 — only deprecation warnings, no blocking errors). `npm run dev` started the Next.js 16.1.6 Turbopack dev server in ~2 seconds; app was immediately reachable at `http://localhost:3000`.
